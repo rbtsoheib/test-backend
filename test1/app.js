@@ -2,7 +2,7 @@
 const express = require("express");
 const { connectToDb, getDb } = require("./DB/DB");
 
-const PORT = 8000;
+const PORT = 8080;
 const app = express(); // Express instance
 
 // Connect to the database
@@ -71,6 +71,22 @@ app.get("/employeslist", checkDbConnection, (req, res) => {
     .toArray()
     .then((employeslist) => {
       res.status(200).json(employeslist);
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).json({ error: "Sorry, your product wasn't found" });
+    });
+});
+
+// Route to get clients list
+app.get("/clientslist", checkDbConnection, (req, res) => {
+  database
+    .collection("clients")
+    .find()
+    .sort({ genres: 1 })
+    .toArray()
+    .then((clientslist) => {
+      res.status(200).json(clientslist);
     })
     .catch((error) => {
       console.error(error);
