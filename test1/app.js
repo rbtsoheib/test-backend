@@ -1,24 +1,39 @@
 //Importing packages
 const express = require("express");
+const { connectToDb, getDb } = require("./DB/DB");
 const PORT = 5678;
 
 //Instance of the sever
-// const app = express();
-const App = express();
-//Routes
-// app.get("/booklist", (req, res) => {
-//   res.json({ msg: "Requesting books from API" });
-// });
+const app = express();
 
-App.get("/soso", (req,res) => {
-    res.json({ msg : "welcome to the k7alech nightclub HURAYYYYYYYYYYY, enjoy ur stay and make sure to be ka7loch"})
+//Connecting to the DB
+let database = "";
+
+connectToDb((err) => {
+//If there is an error we’ll catch it and do nothing,
+  if (!err) {
+    //Listener
+    app.listen(PORT, () => {
+      console.log(`LISTENING ON PORT ${PORT}`);
+    });
+    database = getDb();
+  }
 });
 
-//Listener
-// app.listen(PORT, () => {
-//   console.log(`LISTENING ON PORT ${PORT}`);
-// });
 
-App.listen(PORT, () => {
-    console.log(`LISTENING ON PORT ${PORT}`);
-});
+  //Routes
+app.get("/booklist", (req, res) => {
+    let bookList = [];
+    database.collection("books")
+      .find()
+      .sort({ genres: 1 })
+      .forEach((book) => bookList.push(book))
+      .then(() => {
+        res.status(200).json(bookList);
+      })
+      .catch(() => {
+        res.status(500).json({ error: "Sorry, your document wasn't found" });
+      });
+    res.json({ msg: "Requesting books from API" });
+  });
+
