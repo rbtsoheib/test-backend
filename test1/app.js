@@ -1,27 +1,24 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const userRoutes = require('./routes/users');
+//Importing packages
+const express = require("express");
+const PORT = 5678;
 
-dotenv.config();
+//Instance of the sever
+// const app = express();
+const App = express();
+//Routes
+// app.get("/booklist", (req, res) => {
+//   res.json({ msg: "Requesting books from API" });
+// });
 
-const app = express();
-const PORT = process.env.PORT || 5000;
+App.get("/soso", (req,res) => {
+    res.json({ msg : "welcome to the k7alech nightclub HURAYYYYYYYYYYY, enjoy ur stay and make sure to be ka7loch"})
+});
 
-// Middleware
-app.use(express.json()); // For parsing JSON requests
+//Listener
+// app.listen(PORT, () => {
+//   console.log(`LISTENING ON PORT ${PORT}`);
+// });
 
-// MongoDB connection
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('MongoDB connected'))
-.catch((error) => console.error('MongoDB connection error:', error));
-
-// Routes
-app.use('/api/users', userRoutes);
-
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+App.listen(PORT, () => {
+    console.log(`LISTENING ON PORT ${PORT}`);
 });
