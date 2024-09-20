@@ -1,13 +1,12 @@
 const { MongoClient } = require("mongodb");
-const uri =
-  "mongodb://localhost:27017/test1/learn";
+const uri = "mongodb://localhost:27017"; 
 let dbConnection;
 
 module.exports = {
   connectToDb: (cb) => {
     MongoClient.connect(uri)
       .then((client) => {
-        dbConnection = client.db("Learning-DB");
+        dbConnection = client.db("learn"); 
         return cb();
       })
       .catch((err) => {
@@ -17,3 +16,4 @@ module.exports = {
   },
   getDb: () => dbConnection,
 };
+
