@@ -1,9 +1,12 @@
 // Importing packages
 const express = require("express");
 const { connectToDb, getDb } = require("./DB/DB");
+const { ObjectId } = require("mongodb");
 
-const PORT = 8080;
+const PORT = 8010;
 const app = express(); // Express instance
+// Middleware to parse JSON body
+app.use(express.json()); // Make sure we can handle JSON in POST requests
 
 // Connect to the database
 let database = null;
@@ -42,14 +45,14 @@ app.get("/booklist", checkDbConnection, (req, res) => {
     })
     .catch((error) => {
       console.error(error);
-      res.status(500).json({ error: "Sorry, your document wasn't found" });
+      res.status(500).json({ error: "Sorry, your documents weren't found" });
     });
 });
 
 // Route to get product list
-app.get("/produitsLIst", checkDbConnection, (req, res) => {
+app.get("/produitsList", checkDbConnection, (req, res) => {
   database
-    .collection("prodcuts")
+    .collection("products") // Fixed the collection name
     .find()
     .sort({ genres: 1 })
     .toArray()
@@ -58,11 +61,11 @@ app.get("/produitsLIst", checkDbConnection, (req, res) => {
     })
     .catch((error) => {
       console.error(error);
-      res.status(500).json({ error: "Sorry, your product wasn't found" });
+      res.status(500).json({ error: "Sorry, your products weren't found" });
     });
 });
 
-// Route to get employes list
+// Route to get employees list
 app.get("/employeslist", checkDbConnection, (req, res) => {
   database
     .collection("employes")
@@ -74,7 +77,7 @@ app.get("/employeslist", checkDbConnection, (req, res) => {
     })
     .catch((error) => {
       console.error(error);
-      res.status(500).json({ error: "Sorry, your product wasn't found" });
+      res.status(500).json({ error: "Sorry, your employees weren't found" });
     });
 });
 
@@ -90,25 +93,37 @@ app.get("/clientslist", checkDbConnection, (req, res) => {
     })
     .catch((error) => {
       console.error(error);
-      res.status(500).json({ error: "Sorry, your product wasn't found" });
+      res.status(500).json({ error: "Sorry, your clients weren't found" });
     });
 });
 
-//book/:id route
-app.get("/book/:id", (req, res) => {
-  const id = new ObjectId(req.params.id);
-  db.collection("books")
-    .findOne({ _id: id })
+// Book/:id route
+app.get("/book/:id", checkDbConnection, (req, res) => {
+  const id = req.params.id;
+
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).json({ error: "Invalid ID format" });
+  }
+
+  database
+    .collection("books")
+    .findOne({ _id: new ObjectId(id) })
     .then((book) => {
+      if (!book) {
+        return res.status(404).json({ error: "Book not found" });
+      }
       res.status(200).json(book);
     })
     .catch((err) => {
-      res.status(500).json({ msg: "Sorry, this book doesn't exist" });
+      console.error(err);
+      res
+        .status(500)
+        .json({ error: "Sorry, there was an error fetching the book" });
     });
 });
 
 // Route to get a client by ID
-app.get("/clients/:id", (req, res) => {
+app.get("/clients/:id", checkDbConnection, (req, res) => {
   const id = req.params.id;
 
   // Validate the ObjectId
@@ -116,7 +131,8 @@ app.get("/clients/:id", (req, res) => {
     return res.status(400).json({ error: "Invalid ID format" });
   }
 
-  database.collection("clients")
+  database
+    .collection("clients")
     .findOne({ _id: new ObjectId(id) }) // Use 'new' here
     .then((client) => {
       if (!client) {
@@ -126,6 +142,72 @@ app.get("/clients/:id", (req, res) => {
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ error: "Sorry, there was an error fetching the client" });
+      res
+        .status(500)
+        .json({ error: "Sorry, there was an error fetching the client" });
     });
 });
+
+// Booklist post route
+app.post("/booklist", checkDbConnection, (req, res) => {
+  console.log(req.body); // Log the incoming request body
+  const book = req.body;
+
+  database
+    .collection("books")
+    .insertOne(book)
+    .then((result) => {
+      res.status(201).json(result);
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).json({ error: "Sorry, cannot create this new book" });
+    });
+});
+
+app.post("/employeslist", checkDbConnection, (req, res) => {
+  console.log(req.body); // Log the incoming request body
+  const employe = req.body;
+
+  database
+    .collection("employes")
+    .insertOne(employe)
+    .then((result) => {
+      res.status(201).json(result);
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).json({ error: "Sorry, cannot create this new book" });
+    });
+});
+
+//book/id update(patch) route
+app.put("/booklist/:id", (req, res) => {
+  const update = req.body;
+
+  if (ObjectId.isValid(req.params.id)) {
+    const id = new ObjectId(req.params.id);
+    database.collection("books")
+      .updateOne({ _id: id }, { $set: update })
+      .then((result) => {
+        res.status(200).json(result);
+      })
+      .catch((err) => {
+        res.status(500).json({ error: "Couldn't update document" });
+      });
+  }
+});
+
+//book/:id delete route
+app.delete("/booklist/:id", (req, res) => {
+  const id = new ObjectId(req.params.id);
+  database.collection("books")
+    .deleteOne({ _id: id })
+    .then((result) => {
+      res.status(200).json(result);
+    })
+    .catch((err) => {
+      res.status(500).json({ msg: "Sorry, this book doesn't exist" });
+    });
+});
+
